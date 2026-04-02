@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+gcp_credentials.json
+data/raw/
+.ipynb_checkpoints/
