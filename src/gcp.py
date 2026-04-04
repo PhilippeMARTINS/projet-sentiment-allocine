@@ -7,12 +7,15 @@ Module GCP : upload vers Cloud Storage et chargement dans BigQuery.
 import pandas as pd
 from google.cloud import storage, bigquery
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-PROJECT_ID  = "project-b4d81ada-e874-4f3f-82e"
-BUCKET_NAME = "sentiment-allocine-bucket"
-DATASET_ID  = "sentiment_allocine"
-TABLE_ID    = "reviews"
+PROJECT_ID  = os.getenv("PROJECT_ID")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
+DATASET_ID  = os.getenv("DATASET_ID")
+TABLE_ID    = os.getenv("TABLE_ID")
 
 PROCESSED_PATH = Path("data/processed")
 
