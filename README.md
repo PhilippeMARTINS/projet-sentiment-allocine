@@ -111,6 +111,8 @@ projet-sentiment-allocine/
 [ DASHBOARD ] ─── app.py
   Streamlit · BigQuery live · Filtres dynamiques
 ```
+### DAG Airflow
+![DAG Airflow](outputs/airflow_dag.png)
 
 ---
 
