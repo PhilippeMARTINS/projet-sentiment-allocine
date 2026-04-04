@@ -4,5 +4,6 @@ __pycache__/
 *.db
 .env
 gcp_credentials.json
-data/raw/
+data/raw/*
+!data/raw/reviews_sample.csv
 .ipynb_checkpoints/
