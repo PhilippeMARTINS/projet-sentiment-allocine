@@ -165,38 +165,57 @@ projet-sentiment-allocine/
 
 ---
 
-## 🚀 Installation & Usage
+## 🚀 Installation & Lancement / Getting Started
 
 ### Prérequis / Prerequisites
 - Python 3.9+
-- Google Chrome installé
-- Compte GCP avec Cloud Storage + BigQuery activés
-- `gcloud` CLI configuré (`gcloud auth application-default login`)
-
-### Setup
+- pip
+- Google Chrome installé / Google Chrome installed
+- Compte GCP avec Cloud Storage + BigQuery activés / GCP account with Cloud Storage + BigQuery enabled
+- `gcloud` CLI configuré / `gcloud` CLI configured
 ```bash
-# Cloner le dépôt
+gcloud auth application-default login
+```
+
+### Étapes / Steps
+
+1. Cloner le dépôt / Clone the repository
+```bash
 git clone https://github.com/PhilippeMARTINS/projet-sentiment-allocine.git
 cd projet-sentiment-allocine
+```
 
-# Environnement virtuel
+2. Créer et activer l'environnement virtuel / Create and activate virtual environment
+```bash
 python -m venv venv
-venv\Scripts\activate      # Windows
-source venv/bin/activate   # Mac/Linux
+```
+```bash
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
+```
 
-# Dépendances
+3. Installer les dépendances / Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### Lancer le pipeline complet
+> ⚠️ L'installation de `torch` peut prendre plusieurs minutes selon la connexion.
+> torch installation may take several minutes depending on your connection.
+
+4. Lancer le pipeline complet / Run the full pipeline
 ```bash
 python main.py
 ```
 
-### Lancer le dashboard
+5. Lancer le dashboard / Run the dashboard
 ```bash
 streamlit run app.py
 ```
+
+> ⚠️ Ne jamais copier le dossier `venv/` d'un PC à l'autre — toujours le recréer localement.
+> Never copy the `venv/` folder from one PC to another — always recreate it locally.
 
 ---
 
