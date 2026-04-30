@@ -1,0 +1,37 @@
+# .github/workflows/tests.yml
+# Lance pytest automatiquement à chaque push ou pull request sur main
+
+name: Tests Pipeline Allociné
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: 📦 Installation des dépendances (sans torch pour la CI)
+        run: |
+          pip install pandas numpy pytest
+          pip install beautifulsoup4 python-dotenv
+
+      - name: 🧪 Lancement des tests pytest
+        run: pytest tests/ -v
+        env:
+          # Variables GCP fictives pour les tests (pas d'appel GCP réel en CI)
+          PROJECT_ID: test-project
+          BUCKET_NAME: test-bucket
+          DATASET_ID: test-dataset
+          TABLE_ID: test-table

@@ -9,6 +9,8 @@ transformers>=4.40
 torch>=2.3
 
 # Web scraping
+selenium>=4.18
+webdriver-manager>=4.0
 requests>=2.31
 beautifulsoup4>=4.12
 
@@ -19,3 +21,12 @@ db-dtypes>=1.2
 
 # Dashboard
 streamlit>=1.32
+
+# Configuration
+python-dotenv>=1.0
+
+# Tests
+pytest>=8.4
+
+# Utilitaires
+jupyter>=1.0

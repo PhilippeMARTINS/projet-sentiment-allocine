@@ -1,0 +1,78 @@
+23:57:07 [INFO] =======================================================
+23:57:07 [INFO]   PIPELINE SENTIMENT ALLOCINE
+23:57:07 [INFO] =======================================================
+23:57:07 [INFO] ÉTAPE 1 — SCRAPING ALLOCINÉ
+23:57:07 [INFO] Scraping Allociné — 10 contenus à traiter
+23:57:07 [INFO] ====== WebDriver manager ======
+23:57:08 [INFO] Get LATEST chromedriver version for google-chrome
+23:57:08 [INFO] Get LATEST chromedriver version for google-chrome
+23:57:08 [INFO] Driver [C:\Users\morai\.wdm\drivers\chromedriver\win64\147.0.7727.117\chromedriver-win32/chromedriver.exe] found in cache
+23:57:09 [INFO] Scraping : Intouchables (film)
+23:57:46 [INFO]   150 avis récupérés
+23:57:48 [INFO] Scraping : Inception (film)
+23:58:26 [INFO]   150 avis récupérés
+23:58:29 [INFO] Scraping : Amelie Poulain (film)
+23:59:08 [INFO]   150 avis récupérés
+23:59:10 [INFO] Scraping : The Dark Knight (film)
+23:59:46 [INFO]   150 avis récupérés
+23:59:49 [INFO] Scraping : Interstellar (film)
+00:00:26 [INFO]   150 avis récupérés
+00:00:29 [INFO] Scraping : Breaking Bad (series)
+00:01:07 [INFO]   150 avis récupérés
+00:01:10 [INFO] Scraping : Game of Thrones (series)
+00:01:52 [INFO]   123 avis récupérés
+00:01:55 [INFO] Scraping : Stranger Things (series)
+00:02:32 [INFO]   150 avis récupérés
+00:02:35 [INFO] Scraping : La Casa de Papel (series)
+00:03:12 [INFO]   150 avis récupérés
+00:03:15 [INFO] Scraping : The Walking Dead (series)
+00:03:52 [INFO]   150 avis récupérés
+00:03:57 [INFO] 1473 avis sauvegardés dans 'data\raw\reviews_raw.csv' (films: 750, séries: 723, note moyenne: 3.71/5)
+00:03:57 [INFO] 1473 avis récupérés
+00:03:57 [INFO] ÉTAPE 2 — TRANSFORMATION & ANALYSE DE SENTIMENT
+00:03:57 [INFO] 1473 avis bruts chargés depuis 'data\raw\reviews_raw.csv'
+00:03:57 [INFO] Nettoyage : 1473 avis -> 1473 après suppression des lignes invalides (0 supprimées)
+00:03:57 [INFO] Démarrage de l'analyse de sentiment (1473 avis)...
+00:03:57 [INFO] Chargement du modèle NLP HuggingFace (peut prendre quelques secondes)...
+00:03:58 [INFO] Modèle NLP chargé
+00:04:01 [INFO] Analyse sentiment : 32/1473 avis traités
+00:04:14 [INFO] Analyse sentiment : 192/1473 avis traités
+00:04:27 [INFO] Analyse sentiment : 352/1473 avis traités
+00:04:40 [INFO] Analyse sentiment : 512/1473 avis traités
+00:04:55 [INFO] Analyse sentiment : 672/1473 avis traités
+00:05:11 [INFO] Analyse sentiment : 832/1473 avis traités
+00:05:20 [INFO] Analyse sentiment : 992/1473 avis traités
+00:05:31 [INFO] Analyse sentiment : 1152/1473 avis traités
+00:05:41 [INFO] Analyse sentiment : 1312/1473 avis traités
+00:05:52 [INFO] Analyse sentiment : 1472/1473 avis traités
+00:05:52 [INFO] 1473 avis transformés sauvegardés dans 'data\processed\reviews_clean.csv'
+00:05:52 [INFO] Répartition cohérence : {'coherent': 1268, 'sous-estime': 113, 'sur-estime': 92}
+00:05:52 [INFO] Score sentiment moyen par contenu :
+content_name
+Amelie Poulain      3.85
+Breaking Bad        3.94
+Game of Thrones     4.46
+Inception           3.97
+Interstellar        3.75
+Intouchables        2.96
+La Casa de Papel    3.06
+Stranger Things     3.19
+The Dark Knight     4.18
+The Walking Dead    3.43
+00:05:52 [INFO] ÉTAPE 3 — CHARGEMENT GCP
+00:05:52 [INFO] 1473 avis chargés depuis 'data\processed\reviews_clean.csv'
+00:05:53 [INFO] Fichier uploadé sur GCS : gs://sentiment-allocine-bucket/reviews_clean.csv
+00:05:57 [INFO] 1473 lignes chargées dans BigQuery : project-b4d81ada-e874-4f3f-82e.sentiment_allocine.reviews
+00:05:57 [INFO] Pipeline GCP terminé
+00:05:57 [INFO] ÉTAPE 4 — VISUALISATIONS
+00:05:57 [INFO] Génération des visualisations...
+00:05:57 [INFO] 1473 avis chargés pour l'analyse
+00:05:57 [INFO] Visualisation sauvegardée : note_vs_sentiment.png
+00:05:57 [INFO] Visualisation sauvegardée : coherence_note_sentiment.png
+00:05:57 [INFO] Visualisation sauvegardée : distribution_notes.png
+00:05:57 [INFO] Visualisation sauvegardée : sentiment_par_contenu.png
+00:05:58 [INFO] Visualisation sauvegardée : heatmap_coherence.png
+00:05:58 [INFO] Toutes les visualisations sont dans 'outputs'
+00:05:58 [INFO] =======================================================
+00:05:58 [INFO] PIPELINE TERMINÉ
+00:05:58 [INFO] =======================================================

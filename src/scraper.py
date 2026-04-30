@@ -5,21 +5,26 @@ Module de scraping : récupération des avis Allociné (films + séries).
 Utilise Selenium + BeautifulSoup pour les pages JavaScript dynamiques.
 """
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from bs4 import BeautifulSoup
-import pandas as pd
+import logging
 import time
 import random
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
+import pandas as pd
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+logger = logging.getLogger(__name__)
 
 RAW_DATA_PATH = Path("data/raw")
 RAW_DATA_PATH.mkdir(parents=True, exist_ok=True)
@@ -64,6 +69,7 @@ def create_driver() -> webdriver.Chrome:
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
+    logger.debug("Driver Selenium initialisé")
     return driver
 
 
@@ -73,28 +79,24 @@ def get_page_source(driver: webdriver.Chrome, url: str) -> Optional[BeautifulSou
 
     Args:
         driver: Driver Selenium actif
-        url: URL à charger
+        url:    URL à charger
 
     Returns:
-        Optional[BeautifulSoup]: HTML parsé ou None si erreur
+        Optional[BeautifulSoup]: HTML parsé ou None si erreur critique
     """
     try:
         driver.get(url)
-
-        # Attente que les avis soient chargés
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "review-card"))
         )
-
         time.sleep(random.uniform(1.0, 2.0))
         return BeautifulSoup(driver.page_source, "html.parser")
 
     except Exception as e:
-        print(f"   ⚠️ Erreur chargement {url} : {e}")
-        # Retourne quand même le HTML même si le wait a échoué
+        logger.warning("Erreur chargement %s : %s", url, e)
         try:
             return BeautifulSoup(driver.page_source, "html.parser")
-        except:
+        except Exception:
             return None
 
 
@@ -102,14 +104,14 @@ def extract_reviews_from_soup(
     soup: BeautifulSoup,
     content_id: str,
     content_type: str,
-    content_name: str
+    content_name: str,
 ) -> list[dict]:
     """
     Extrait tous les avis d'une page HTML parsée.
 
     Args:
-        soup: HTML parsé de la page
-        content_id: ID Allociné du contenu
+        soup:         HTML parsé de la page
+        content_id:   ID Allociné du contenu
         content_type: 'film' ou 'series'
         content_name: Nom du film/série
 
@@ -118,7 +120,6 @@ def extract_reviews_from_soup(
     """
     reviews = []
 
-    # Allociné utilise plusieurs classes possibles selon la version
     blocks = (
         soup.find_all("div", class_="review-card")
         or soup.find_all("div", class_="hred review-card")
@@ -167,7 +168,7 @@ def extract_reviews_from_soup(
             })
 
         except Exception as e:
-            print(f"   ⚠️ Erreur extraction bloc : {e}")
+            logger.warning("Erreur extraction d'un bloc avis : %s", e)
             continue
 
     return reviews
@@ -178,17 +179,17 @@ def scrape_content(
     content_id: str,
     content_type: str,
     content_name: str,
-    n_pages: int = 10
+    n_pages: int = 10,
 ) -> list[dict]:
     """
     Scrape les avis d'un film ou d'une série sur n pages.
 
     Args:
-        driver: Driver Selenium actif
-        content_id: ID Allociné
+        driver:       Driver Selenium actif
+        content_id:   ID Allociné
         content_type: 'film' ou 'series'
         content_name: Nom du contenu
-        n_pages: Nombre de pages à scraper
+        n_pages:      Nombre de pages à scraper
 
     Returns:
         list[dict]: Tous les avis récupérés
@@ -200,7 +201,7 @@ def scrape_content(
             url = f"{BASE_URL}/film/fichefilm-{content_id}/critiques/spectateurs/?page={page}"
         else:
             url = f"{BASE_URL}/series/ficheserie-{content_id}/critiques/?page={page}"
-            
+
         soup = get_page_source(driver, url)
         if not soup:
             break
@@ -208,12 +209,11 @@ def scrape_content(
         reviews = extract_reviews_from_soup(soup, content_id, content_type, content_name)
 
         if not reviews:
-            print(f"   ⚠️ Aucun avis page {page} — arrêt")
+            logger.debug("Aucun avis page %d pour '%s' — arrêt", page, content_name)
             break
 
         all_reviews.extend(reviews)
-        print(f"   ✅ Page {page}/{n_pages} — {len(reviews)} avis")
-
+        logger.debug("  Page %d/%d — %d avis récupérés", page, n_pages, len(reviews))
         time.sleep(random.uniform(1.5, 2.5))
 
     return all_reviews
@@ -221,47 +221,49 @@ def scrape_content(
 
 def run_scraping() -> pd.DataFrame:
     """
-    Lance le scraping complet sur tous les films et séries définis.
+    Lance le scraping complet sur tous les contenus définis dans CONTENUS.
 
     Returns:
-        pd.DataFrame: Tous les avis récupérés
+        pd.DataFrame: Tous les avis récupérés, sauvegardés dans data/raw/reviews_raw.csv
     """
-    print("=== SCRAPING ALLOCINÉ (Selenium) ===")
-    print(f"Contenus à scraper : {len(CONTENUS)}")
+    logger.info("Scraping Allociné — %d contenus à traiter", len(CONTENUS))
 
     driver = create_driver()
     all_reviews = []
 
     try:
         for content_id, content_type, content_name in CONTENUS:
-            print(f"\n🎬 {content_name} ({content_type})")
+            logger.info("Scraping : %s (%s)", content_name, content_type)
             reviews = scrape_content(driver, content_id, content_type, content_name)
             all_reviews.extend(reviews)
-            print(f"   Total : {len(reviews)} avis")
+            logger.info("  %d avis récupérés", len(reviews))
             time.sleep(random.uniform(2.0, 3.0))
 
     finally:
         driver.quit()
+        logger.debug("Driver Selenium fermé")
 
     df = pd.DataFrame(all_reviews)
 
     if df.empty:
-        print("\n⚠️ Aucun avis récupéré")
+        logger.warning("Aucun avis récupéré — vérifier les sélecteurs CSS ou l'accès au site")
         return df
 
     output_path = RAW_DATA_PATH / "reviews_raw.csv"
     df.to_csv(output_path, index=False, encoding="utf-8-sig")
 
-    print(f"\n✅ {len(df)} avis sauvegardés dans {output_path}")
-    print(f"   Films  : {len(df[df['content_type']=='film'])} avis")
-    print(f"   Séries : {len(df[df['content_type']=='series'])} avis")
-    print(f"   Note moyenne : {df['note'].mean():.2f}/5")
+    nb_films  = len(df[df["content_type"] == "film"])
+    nb_series = len(df[df["content_type"] == "series"])
+    logger.info(
+        "%d avis sauvegardés dans '%s' (films: %d, séries: %d, note moyenne: %.2f/5)",
+        len(df), output_path, nb_films, nb_series, df["note"].mean(),
+    )
 
     return df
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     df = run_scraping()
     if not df.empty:
-        print("\n📋 Aperçu :")
-        print(df.head())
+        logger.info("Aperçu :\n%s", df.head().to_string())
