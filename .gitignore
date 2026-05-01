@@ -1,9 +1,35 @@
+# Environnement virtuel
 venv/
-__pycache__/
-*.pyc
-*.db
-.env
-gcp_credentials.json
+ 
+# Données brutes — tout sauf le fichier sample
 data/raw/*
 !data/raw/reviews_sample.csv
+ 
+# Données transformées (fichiers générés)
+data/processed/
+ 
+# Base de données
+*.db
+ 
+# Credentials GCP — NE JAMAIS COMMITTER
+.env
+gcp_credentials.json
+*.json
+ 
+# Fichiers Python compilés
+*.pyc
+__pycache__/
+ 
+# Logs
+pipeline.log
+*.log
+ 
+# Jupyter
 .ipynb_checkpoints/
+ 
+# Outputs générés (graphiques)
+outputs/
+ 
+# OS
+.DS_Store
+Thumbs.db
