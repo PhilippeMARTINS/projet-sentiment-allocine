@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-from transformers import pipeline
 
 
 # ── Configuration ─────────────────────────────────────────────────────────────
@@ -118,8 +117,9 @@ def load_sentiment_model():
     Returns:
         pipeline: Modèle HuggingFace prêt à l'emploi
     """
+    from transformers import pipeline as hf_pipeline
     logger.info("Chargement du modèle NLP HuggingFace (peut prendre quelques secondes)...")
-    model = pipeline(
+    model = hf_pipeline(
         "sentiment-analysis",
         model="nlptown/bert-base-multilingual-uncased-sentiment",
         truncation=True,
