@@ -172,11 +172,28 @@ def compute_coherence(note: float, sentiment_score: int) -> str:
 > Les 14% restants révèlent des comportements intéressants — des utilisateurs
 > qui sur-notent ou sous-notent par rapport à ce qu'ils écrivent réellement.
 
+### Limites du modèle — Ironie et sarcasme
+
+BERT détecte la polarité des mots de manière **littérale** — il ne comprend pas
+l'ironie ou le sarcasme. Par exemple, un avis notant **1/5 Breaking Bad** avec
+le texte *"Convient parfaitement pour s'endormir bien confortablement dans son canapé"*
+se voit attribuer un sentiment de **5 étoiles** car les mots "parfaitement" et
+"confortablement" sont positivement connotés, alors que l'intention est clairement
+sarcastique.
+
+![Limite sarcasme](outputs/dashboard_limite_sarcasme.png)
+
+Ces cas font partie des 14% d'incohérences détectées et constituent un **problème
+ouvert en NLP** — même les modèles les plus avancés s'y trompent parfois. Une
+piste d'amélioration serait d'utiliser un modèle fine-tuné spécifiquement sur
+des données sarcastiques en français, comme **CamemBERT** enrichi de données
+annotées manuellement.
+
 ---
 
 ## 📊 Visualisations — Aperçu du dashboard
 
-Le dashboard contient **9 graphiques** + une console BigQuery :
+Le dashboard contient **8 graphiques** + un explorateur d'avis interactif + une console BigQuery :
 
 | # | Titre | Description |
 |---|-------|-------------|
@@ -188,6 +205,7 @@ Le dashboard contient **9 graphiques** + une console BigQuery :
 | 6 | 📅 Évolution temporelle du sentiment | Courbe sentiment moyen dans le temps |
 | 7 | 🎯 Score de confiance du modèle NLP | Distribution + confiance par label |
 | 8 | 🔵 Note vs Sentiment — vue individuelle | Scatter plot avec droite de régression |
+| — | 🎲 Explorateur d'avis — Note × Sentiment | Sélectionne un contenu + une note → avis réel avec score NLP, confiance et cohérence |
 | — | 🧮 Requête BigQuery personnalisée | Console SQL sur la table BigQuery live |
 
 ### ⭐ Note Allociné vs Score Sentiment NLP
