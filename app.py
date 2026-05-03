@@ -127,7 +127,6 @@ col5.metric("📊 Taux cohérence",  f"{pct:.1f}%")
 
 st.markdown("---")
 
-
 # ── Graphique 1 — Note vs Sentiment ───────────────────────────────────────────
 st.subheader("⭐ Note Allociné vs Score Sentiment NLP")
 st.caption("Un écart révèle un décalage entre ce que les spectateurs notent et ce qu'ils écrivent.")
@@ -241,7 +240,7 @@ st.caption(
     "Un avis long et négatif révèle souvent une déception argumentée."
 )
 
-df_len = df[df["longueur_avis"] > 0].copy()
+df_len = df[(df["longueur_avis"] > 0) & (df["longueur_avis"] <= 5000)].copy()
 
 if not df_len.empty:
     # Palette adaptée aux labels bruts HuggingFace (1 star → rouge, 5 stars → vert)
@@ -475,6 +474,149 @@ else:
 
 st.markdown("---")
 
+# ── Explorateur d'avis ────────────────────────────────────────────────────────
+st.subheader("🎲 Explorateur d'avis — Note × Sentiment")
+st.caption(
+    "Sélectionne un contenu et une note pour voir un avis réel "
+    "avec le score de sentiment que le modèle NLP lui a attribué."
+)
+
+col_sel1, col_sel2 = st.columns(2)
+
+with col_sel1:
+    contenus_dispo = sorted(df_full["content_name"].dropna().unique().tolist())
+    contenu_choisi = st.selectbox("🎬 Contenu", contenus_dispo, key="explorer_contenu")
+
+with col_sel2:
+    notes_dispo = sorted(
+        df_full[df_full["content_name"] == contenu_choisi]["note"]
+        .dropna()
+        .unique()
+        .tolist()
+    )
+    note_choisie = st.selectbox(
+        "⭐ Note Allociné",
+        notes_dispo,
+        format_func=lambda x: f"{x:.1f} / 5",
+        key="explorer_note",
+    )
+
+# Filtrage des avis correspondants
+df_explorer = df_full[
+    (df_full["content_name"] == contenu_choisi) &
+    (df_full["note"] == note_choisie)
+].reset_index(drop=True)
+
+if df_explorer.empty:
+    st.info("ℹ️ Aucun avis trouvé pour cette combinaison.")
+else:
+    # Initialisation ou rerandomisation
+    if st.button("🔀 Autre avis", key="btn_autre_avis"):
+        st.session_state["explorer_idx"] = int(
+            __import__("random").randint(0, len(df_explorer) - 1)
+        )
+
+    if "explorer_idx" not in st.session_state or \
+       st.session_state["explorer_idx"] >= len(df_explorer):
+        st.session_state["explorer_idx"] = 0
+
+    avis = df_explorer.iloc[st.session_state["explorer_idx"]]
+
+    # Code couleur de cohérence
+    couleur_coh = COULEURS_COHERENCE.get(avis["coherence"], "#6B7280")
+    emoji_coh   = {"coherent": "✅", "sur-estime": "⚠️", "sous-estime": "⬇️"}.get(
+        avis["coherence"], "❓"
+    )
+
+    # Affichage de la carte avis
+    with st.container():
+        st.markdown(
+            f"""
+            <div style="
+                border: 1.5px solid {couleur_coh};
+                border-radius: 10px;
+                padding: 20px 24px;
+                background-color: #f9fafb;
+                margin-top: 12px;
+            ">
+                <div style="font-size: 14px; color: #6B7280; margin-bottom: 8px;">
+                    🎬 <strong>{avis['content_name']}</strong>
+                    &nbsp;·&nbsp; {avis['content_type'].capitalize()}
+                    &nbsp;·&nbsp; Note donnée : <strong>{avis['note']:.1f} / 5</strong>
+                </div>
+                <div style="
+                    font-size: 16px;
+                    color: #111827;
+                    line-height: 1.6;
+                    margin-bottom: 16px;
+                    font-style: italic;
+                ">
+                    « {avis['texte']} »
+                </div>
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 12px 0;">
+                <div style="display: flex; gap: 32px; font-size: 14px;">
+                    <div>
+                        🤖 <strong>Sentiment NLP</strong><br>
+                        <span style="font-size: 18px; font-weight: bold; color: #2563EB;">
+                            {avis['sentiment_label']}
+                        </span>
+                        &nbsp;({avis['sentiment_score']} / 5)
+                    </div>
+                    <div>
+                        📊 <strong>Confiance</strong><br>
+                        <span style="font-size: 18px; font-weight: bold; color: #7C3AED;">
+                            {avis['sentiment_confidence']:.0%}
+                        </span>
+                    </div>
+                    <div>
+                        {emoji_coh} <strong>Cohérence</strong><br>
+                        <span style="
+                            font-size: 15px;
+                            font-weight: bold;
+                            color: {couleur_coh};
+                        ">
+                            {avis['coherence'].replace('-', ' ').capitalize()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Explication de la cohérence
+        diff = abs(avis["note"] - avis["sentiment_score"])
+        if avis["coherence"] == "coherent":
+            st.success(
+                f"L'utilisateur note **{avis['note']:.1f}/5** et le modèle détecte "
+                f"un sentiment de **{avis['sentiment_score']}/5** — "
+                f"écart de {diff:.1f} point(s), cohérent ✅"
+            )
+        elif avis["coherence"] == "sur-estime":
+            st.warning(
+                f"L'utilisateur note **{avis['note']:.1f}/5** mais écrit comme quelqu'un "
+                f"qui ressent **{avis['sentiment_score']}/5** — "
+                f"il sur-estime sa note de {diff:.1f} point(s) ⚠️"
+            )
+        else:
+            st.warning(
+                f"L'utilisateur note **{avis['note']:.1f}/5** mais écrit comme quelqu'un "
+                f"qui ressent **{avis['sentiment_score']}/5** — "
+                f"il sous-estime sa note de {diff:.1f} point(s) ⬇️"
+            )
+
+        # Message discret si écart très fort — possible ironie non détectée
+        if diff >= 3:
+            st.caption(
+                "ℹ️ Écart important — possible ironie ou sarcasme non détecté par le modèle."
+            )
+
+        st.caption(
+            f"Avis {st.session_state['explorer_idx'] + 1} / {len(df_explorer)} "
+            f"pour cette combinaison · Date : {avis.get('date_clean', 'N/A')}"
+        )
+
+st.markdown("---")
 
 # ── Section SQL ────────────────────────────────────────────────────────────────
 st.subheader("🧮 Requête BigQuery personnalisée")
